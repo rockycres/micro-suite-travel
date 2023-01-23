@@ -1,0 +1,97 @@
+spring:
+    application:
+        name: gateway-service
+    config:
+        import: "optional:configserver:http://localhost:8888"
+
+
+    cloud:
+        discovery:
+            enabled: true
+        gateway:
+            discovery:
+                locator:
+                    enabled: true
+                    lowerCaseServiceId: true
+                routes:
+                    - id: customer-service-route
+                      uri: lb://CUSTOMER-SERVICE
+                      predicates:
+                          - Path=/api-customer/v1/customer/**
+                      filters:
+                          - RewritePath=/customer-service/api-customer/v1/customer/(?<segment>.*),/api-customer/v1/customer/$\{segment}
+                          - name: CircuitBreaker
+                            args:
+                              name: CustomerSvcCircuitBreaker
+                              fallbackUri: forward:/FALLBACK-SERVICE
+                          - TokenRelay=
+                    - id: order-service-route
+                      uri: lb://ORDER-SERVICE
+                      predicates:
+                          - Path=/api-order/v1/order/**
+                      filters:
+                          - RewritePath=/order-service/api-order/v1/order/(?<segment>.*),/api-order/v1/order/$\{segment}
+                          - name: CircuitBreaker
+                            args:
+                                name: CustomerSvcCircuitBreaker
+                                fallbackUri: forward:/FALLBACK-SERVICE
+                          - TokenRelay=
+                    - id: travel-service-route
+                      uri: lb://TRAVEL-SERVICE
+                      predicates:
+                          - Path=/api-travel/v1/travel/**
+                      filters:
+                          - RewritePath=/travel-service/api-travel/v1/travel/(?<segment>.*),/api-travel/v1/travel/$\{segment}
+                          - name: CircuitBreaker
+                            args:
+                                name: CustomerSvcCircuitBreaker
+                                fallbackUri: forward:/FALLBACK-SERVICE
+                          - TokenRelay=
+                    - id: any-service-fallback-route
+                      uri: lb://FALLBACK-SERVICE
+                      predicates:
+                          - Path=Path=/api-fallback/v1/**
+
+resilience4j:
+    circuitbreaker:
+        configs:
+            default:
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                eventConsumerBufferSize: 10
+                failureRateThreshold: 5
+##                ignoreExceptions: '[java.lang.IllegalStateException]'
+                minimumNumberOfCalls: 5
+                permittedNumberOfCallsInHalfOpenState: 3
+##                recordExceptions: '[org.springframework.web.client.HttpServerErrorException,java.io.IOException]'
+                slidingWindowSize: 10
+                slowCallDurationThreshold: 200ms
+                slowCallRateThreshold: 30
+                waitDurationInOpenState: 2s
+
+
+            shared:
+                eventConsumerBufferSize: 10
+                failureRateThreshold: 50
+                ##                ignoreExceptions: '[java.lang.IllegalStateException]'
+                permittedNumberOfCallsInHalfOpenState: 30
+                slidingWindowSize: 100
+                waitDurationInOpenState: 1s
+        instances:
+            customer-service:
+                baseConfig: default
+            order-service:
+                eventConsumerBufferSize: 10
+                failureRateThreshold: 50
+                minimumNumberOfCalls: 10
+                permittedNumberOfCallsInHalfOpenState: 3
+                slidingWindowSize: 10
+                waitDurationInOpenState: 1s
+
+
+okta:
+    oauth2:
+        issuer: https://dev-63244211.okta.com/oauth2/default
+        client-id: 0oa7zgeucvblrO9Vh5d7
+        client-secret: xMPMr-7y1oB4j372HTxI98aZRP8HMUjNao08Gy7O
+        redirect-uri: /login/oauth2/code/okta
+        scopes: openid, email, profile, offline_access

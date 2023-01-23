@@ -1,0 +1,85 @@
+spring:
+    application:
+        name: order-service
+    config:
+        import: "optional:configserver:http://localhost:8888"
+    jpa:
+        hibernate:
+            ddl-auto: none
+        properties:
+            hibernate:
+                format_sql: true
+                show_sql: true
+                type: trace
+                use_sql_comments: true
+
+    data:
+        web:
+            pageable:
+                max-page-size: 100
+                page-parameter: 'page '
+                size-parameter: 'size '
+
+        mvc:
+            resources:
+                add-mappings: false
+            throw-exception-if-no-handler-found: true
+
+        thymeleaf:
+            check-template-location: false
+
+    zipkin:
+        sender:
+            type: rabbit
+        sleuth:
+            sampler:
+                probability:  1.0
+        rabbitmq:
+            queue : zipkin
+
+management:
+    endpoint:
+        health:
+            show-details: always
+    endpoints:
+        web:
+            exposure:
+                include: '*'
+
+
+server:
+    compression:
+        enabled: true
+        mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+        min-response-size: 2048
+
+springdoc:
+    api-docs:
+        path: /docs/v3/api-docs
+    swagger-ui:
+        path: /docs/swagger-ui
+eureka:
+    instance:
+        prefer-ip-address: true
+
+okta:
+    oauth2:
+        issuer: https://dev-63244211.okta.com/oauth2/default
+        client-id: 0oa7zgeucvblrO9Vh5d7
+        client-secret: xMPMr-7y1oB4j372HTxI98aZRP8HMUjNao08Gy7O
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: https://dev-63244211.okta.com/oauth2/default
+            client:
+                registration:
+                    pricing-client:
+                        provider: okta
+                        authorization-grant-type: client_credentials
+                        scope: travel
+                        client-id: 0oa7zgeucvblrO9Vh5d7
+                        client-secret: xMPMr-7y1oB4j372HTxI98aZRP8HMUjNao08Gy7O
+                provider:
+                    okta:
+                        issuer-uri: https://dev-63244211.okta.com/oauth2/default
