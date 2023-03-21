@@ -11,8 +11,8 @@ spring:
           uri: https://github.com/rockycres/spring-config-repo-microsvc-suite
           search-paths:
             - 'service-config/*service'
-          username: rockycres@gmail.com
-          password: GITgit1989@
+          username: xx@gmail.com
+          password: xxx
           skipSslValidation: true
           default-label: master
 
